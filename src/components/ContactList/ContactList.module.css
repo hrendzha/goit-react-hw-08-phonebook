@@ -1,0 +1,9 @@
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.listItem:not(:last-child) {
+    margin-bottom: 10px;
+}

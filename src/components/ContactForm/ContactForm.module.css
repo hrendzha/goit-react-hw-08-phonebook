@@ -1,0 +1,22 @@
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+.field:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+.fieldWrapper {
+    margin-bottom: 20px;
+}
+
+.label {
+    margin-bottom: 5px;
+}
+
+.contactForm {
+    padding: 10px;
+
+    border: 1px solid black;
+}
