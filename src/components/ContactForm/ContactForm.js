@@ -1,15 +1,12 @@
 import { useState, memo } from 'react';
 import s from './ContactForm.module.css';
-import {
-    useFetchContactsQuery,
-    useAddContactMutation,
-} from 'services/contacts-api';
+import { useFetchContactsQuery, useAddContactMutation } from 'services/api';
 
 function ContactForm() {
     const [name, setName] = useState('');
     const [number, setNumber] = useState('');
 
-    const { data: contacts } = useFetchContactsQuery();
+    const { data: contacts = [] } = useFetchContactsQuery();
     const [addContact, { isLoading: isAddingContact }] =
         useAddContactMutation();
 
@@ -35,7 +32,11 @@ function ContactForm() {
             return;
         }
 
-        addContact({ name, number });
+        try {
+            addContact({ name, number });
+        } catch (error) {
+            console.log(error);
+        }
 
         resetState();
     };

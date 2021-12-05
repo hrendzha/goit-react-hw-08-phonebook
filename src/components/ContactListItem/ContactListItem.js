@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import s from './ContactListItem.module.css';
-import { useDeleteContactMutation } from 'services/contacts-api';
+import { useDeleteContactMutation } from 'services/api';
 
 ContactListItem.propTypes = {
     name: PropTypes.string.isRequired,

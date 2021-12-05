@@ -1,23 +1,45 @@
-import { useState } from 'react';
-import ContactForm from './components/ContactForm';
-import Filter from './components/Filter';
-import ContactList from './components/ContactList';
-import Container from './components/Container';
+import { useSelector } from 'react-redux';
+import { Switch } from 'react-router-dom';
+import { useFetchCurrentUserQuery } from 'services/api';
+import { authSelectors } from 'redux/auth';
+import AppBar from './components/AppBar';
+import HomePage from 'pages/HomePage';
+import ContactsPage from 'pages/ContactsPage';
+import RegisterPage from 'pages/RegisterPage';
+import LoginPage from 'pages/LoginPage';
+import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
 
 function App() {
-    const [filter, setFilter] = useState('');
-
-    const handleFilterChange = e => setFilter(e.target.value);
+    const token = useSelector(authSelectors.selectToken);
+    const { isFetching } = useFetchCurrentUserQuery(null, {
+        skip: !token,
+    });
 
     return (
-        <Container>
-            <h1>Phonebook</h1>
-            <ContactForm />
+        !isFetching && (
+            <>
+                <AppBar />
 
-            <h2>Contacts</h2>
-            <Filter filter={filter} onFilterChange={handleFilterChange} />
-            <ContactList filter={filter} />
-        </Container>
+                <Switch>
+                    <PublicRoute path="/" exact>
+                        <HomePage />
+                    </PublicRoute>
+
+                    <PrivateRoute path="/contacts" redirectTo="/login">
+                        <ContactsPage />
+                    </PrivateRoute>
+
+                    <PublicRoute path="/register" restricted>
+                        <RegisterPage />
+                    </PublicRoute>
+
+                    <PublicRoute path="/login" restricted>
+                        <LoginPage />
+                    </PublicRoute>
+                </Switch>
+            </>
+        )
     );
 }
 

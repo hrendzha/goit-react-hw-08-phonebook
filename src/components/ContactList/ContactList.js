@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import PropTypes from 'prop-types';
 import ContactListItem from '../ContactListItem';
-import { useFetchContactsQuery } from 'services/contacts-api';
+import { useFetchContactsQuery } from 'services/api';
 import filterContacts from 'js/filterContacts';
 import s from './ContactList.module.css';
 
@@ -10,11 +10,11 @@ ContactList.propTypes = {
 };
 
 function ContactList({ filter }) {
-    const { data: contacts, isFetching } = useFetchContactsQuery();
+    const { data: contacts, isLoading, isFetching } = useFetchContactsQuery();
 
     const visibleContacts = filterContacts(contacts, filter);
 
-    const showContacts = !isFetching && visibleContacts.length > 0;
+    // const showContacts = !isFetching && visibleContacts.length > 0;
     const showIfListEmpty =
         visibleContacts.length === 0 && !isFetching && !filter;
     const showIfNoResults =
@@ -22,8 +22,8 @@ function ContactList({ filter }) {
 
     return (
         <>
-            {isFetching && <p>Loading contacts ...</p>}
-            {showContacts && (
+            {isLoading && <p>Loading contacts ...</p>}
+            {visibleContacts.length > 0 && (
                 <ul>
                     {visibleContacts.map(({ id, name, number }) => (
                         <li className={s.listItem} key={id}>
