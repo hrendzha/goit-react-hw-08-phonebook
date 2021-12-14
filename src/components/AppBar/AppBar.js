@@ -1,19 +1,33 @@
-import * as React from 'react';
-import s from './AppBar.module.css';
-import UserMenu from 'components/UserMenu';
-import AuthNav from 'components/AuthNav';
-import MainNav from 'components/MainNav';
+import { AppBar, Container, Toolbar } from '@mui/material';
+import MobileNav from 'components/MobileNav';
+import PcNav from 'components/PcNav';
 import { useAuth } from 'hooks/useAuth';
+import UserMenu from 'components/UserMenu';
 
-const AppBar = () => {
-    const user = useAuth();
+const ResponsiveAppBar = () => {
+  const user = useAuth();
 
-    return (
-        <header className={s.header}>
-            <MainNav />
-            {user ? <UserMenu /> : <AuthNav />}
-        </header>
-    );
+  return (
+    <AppBar position="static">
+      <Container maxWidth="xl">
+        <Toolbar
+          disableGutters
+          sx={{
+            flexDirection: {
+              xs: user ? 'row' : 'row-reverse',
+              md: 'row',
+            },
+          }}
+        >
+          <MobileNav user={user} />
+
+          <PcNav user={user} />
+
+          {user && <UserMenu />}
+        </Toolbar>
+      </Container>
+    </AppBar>
+  );
 };
 
-export default AppBar;
+export default ResponsiveAppBar;
