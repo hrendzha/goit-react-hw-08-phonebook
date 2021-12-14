@@ -1,5 +1,17 @@
-import React from 'react';
+import { Box, Typography } from '@mui/material';
 
 export default function HomePage() {
-    return <h1>Home/welcome page</h1>;
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100vw',
+        height: 'calc(100vh - 64px)',
+      }}
+    >
+      <Typography variant="h2">Phonebook</Typography>
+    </Box>
+  );
 }

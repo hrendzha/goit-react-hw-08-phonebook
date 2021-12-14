@@ -1,79 +1,127 @@
-import { useState, memo } from 'react';
-import s from './ContactForm.module.css';
+import { memo } from 'react';
+import { useDispatch } from 'react-redux';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Box, TextField } from '@mui/material';
+import ContactPageIcon from '@mui/icons-material/ContactPage';
 import { useFetchContactsQuery, useAddContactMutation } from 'services/api';
+import { addContactFormSchema } from 'utils/yupSchemata';
+import Wrapper from 'components/Wrapper';
+import SubmitFormBtn from 'components/SubmitFormBtn';
+import TitleWithIcon from 'components/TitleWithIcon';
+import { showAlert } from 'redux/alert/alertSlice';
 
 function ContactForm() {
-    const [name, setName] = useState('');
-    const [number, setNumber] = useState('');
+  const dispatch = useDispatch();
 
-    const { data: contacts = [] } = useFetchContactsQuery();
-    const [addContact, { isLoading: isAddingContact }] =
-        useAddContactMutation();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset: resetForm,
+  } = useForm({
+    defaultValues: {
+      name: '',
+      number: '',
+    },
+    mode: 'onChange',
+    resolver: yupResolver(addContactFormSchema),
+  });
 
-    const handleInputChange = e => {
-        const { name, value } = e.target;
+  const { data: contacts = [] } = useFetchContactsQuery();
 
-        name === 'name' ? setName(value) : setNumber(value);
-    };
+  const [addContact, { isLoading: isAddingContact }] = useAddContactMutation();
 
-    const resetState = () => {
-        setName('');
-        setNumber('');
-    };
+  const isContactNameExist = contactName =>
+    contacts.find(contact => contact.name === contactName);
 
-    const isContactNameExist = () =>
-        contacts.find(contact => contact.name === name);
+  const onSubmit = async contactData => {
+    if (isContactNameExist(contactData.name)) {
+      dispatch(
+        showAlert({
+          isOpen: true,
+          message: `${contactData.name} is already in contacts`,
+          type: 'error',
+        }),
+      );
+      return;
+    }
 
-    const handleSubmit = e => {
-        e.preventDefault();
+    try {
+      await addContact(contactData).unwrap();
+      dispatch(
+        showAlert({
+          isOpen: true,
+          message: `${contactData.name} has been added`,
+          type: 'success',
+        }),
+      );
+      resetForm();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-        if (isContactNameExist()) {
-            alert(`${name} is already in contacts`);
-            return;
-        }
+  return (
+    <Wrapper>
+      <TitleWithIcon
+        title="New contact"
+        icon={ContactPageIcon}
+        titleComponent="h2"
+      />
 
-        try {
-            addContact({ name, number });
-        } catch (error) {
-            console.log(error);
-        }
+      <Box
+        component="form"
+        noValidate
+        onSubmit={handleSubmit(onSubmit)}
+        sx={{ mt: 3 }}
+      >
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <TextField
+              ref={field.ref}
+              {...field}
+              required
+              fullWidth
+              autoComplete="given-name"
+              name="name"
+              id="given-name"
+              label="Name"
+              margin="normal"
+              error={Boolean(errors.name)}
+              helperText={errors.name?.message}
+            />
+          )}
+        />
 
-        resetState();
-    };
+        <Controller
+          control={control}
+          name="number"
+          render={({ field }) => (
+            <TextField
+              {...field}
+              required
+              fullWidth
+              autoComplete="given-number"
+              inputProps={{ inputMode: 'tel' }}
+              name="number"
+              id="given-number"
+              label="Number"
+              margin="normal"
+              error={Boolean(errors.number)}
+              helperText={errors.number?.message}
+            />
+          )}
+        />
 
-    return (
-        <form className={s.contactForm} onSubmit={handleSubmit}>
-            <div className={s.fieldWrapper}>
-                <label className={s.field}>
-                    <span className={s.label}>Name</span>
-                    <input
-                        type="text"
-                        name="name"
-                        pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-                        title="Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
-                        required
-                        value={name}
-                        onChange={handleInputChange}
-                    />
-                </label>
-                <label className={s.field}>
-                    <span className={s.label}>Number</span>
-                    <input
-                        type="tel"
-                        name="number"
-                        pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-                        title="Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +"
-                        required
-                        value={number}
-                        onChange={handleInputChange}
-                    />
-                </label>
-            </div>
-            <button type="submit" disabled={isAddingContact}>
-                {isAddingContact ? 'Adding ...' : 'Add contact'}
-            </button>
-        </form>
-    );
+        <SubmitFormBtn isSubmitting={isAddingContact}>
+          Add contact
+        </SubmitFormBtn>
+      </Box>
+    </Wrapper>
+  );
 }
 
 export default memo(ContactForm);

@@ -1,45 +1,73 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
+import { List, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 import ContactListItem from '../ContactListItem';
 import { useFetchContactsQuery } from 'services/api';
-import filterContacts from 'js/filterContacts';
-import s from './ContactList.module.css';
+import filterContacts from 'utils/filterContacts';
+import ContactItemSkeleton from 'components/ContactItemSkeleton';
 
 ContactList.propTypes = {
-    filter: PropTypes.string.isRequired,
+  filter: PropTypes.string.isRequired,
+  filterInputRef: PropTypes.object,
 };
 
-function ContactList({ filter }) {
-    const { data: contacts, isLoading, isFetching } = useFetchContactsQuery();
+function ContactList({ filter, filterInputRef: { current: filterInputRef } }) {
+  const {
+    data: contacts = [],
+    isLoading: isFirstTimeLoading,
+    isFetching,
+  } = useFetchContactsQuery();
 
-    const visibleContacts = filterContacts(contacts, filter);
+  const countSkeletons = useMemo(() => {
+    if (!filterInputRef) return;
 
-    // const showContacts = !isFetching && visibleContacts.length > 0;
-    const showIfListEmpty =
-        visibleContacts.length === 0 && !isFetching && !filter;
-    const showIfNoResults =
-        visibleContacts.length === 0 && !isFetching && filter;
+    const spaceBelowFilterInput =
+      window.innerHeight - filterInputRef.getBoundingClientRect().bottom;
 
-    return (
-        <>
-            {isLoading && <p>Loading contacts ...</p>}
-            {visibleContacts.length > 0 && (
-                <ul>
-                    {visibleContacts.map(({ id, name, number }) => (
-                        <li className={s.listItem} key={id}>
-                            <ContactListItem
-                                name={name}
-                                number={number}
-                                id={id}
-                            />
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {showIfListEmpty && <h2>Contact list empty</h2>}
-            {showIfNoResults && <h2>No results</h2>}
-        </>
-    );
+    const skeletonHeight = 56;
+
+    const countSkeletons = Math.floor(spaceBelowFilterInput / skeletonHeight);
+
+    return countSkeletons > 0 ? Array(countSkeletons).fill(null) : 0;
+  }, [filterInputRef]);
+
+  const visibleContacts = filterContacts(contacts, filter);
+
+  const isListEmpty = contacts.length === 0 && !filter && !isFetching;
+  const isListEmptyAfterFiltration = visibleContacts.length === 0 && filter;
+  const canShowSkeletons = isFirstTimeLoading && countSkeletons;
+
+  return (
+    <>
+      {canShowSkeletons && (
+        <List sx={{ width: '100%' }}>
+          {countSkeletons.map((_, index) => (
+            <ContactItemSkeleton key={index} />
+          ))}
+        </List>
+      )}
+
+      {contacts.length > 0 && (
+        <List sx={{ width: '100%' }}>
+          {visibleContacts.map(({ id, name, number }) => (
+            <ContactListItem key={id} name={name} number={number} id={id} />
+          ))}
+        </List>
+      )}
+
+      {isListEmpty && (
+        <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>
+          Contact list empty
+        </Typography>
+      )}
+
+      {isListEmptyAfterFiltration && (
+        <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>
+          No results
+        </Typography>
+      )}
+    </>
+  );
 }
 
 export default memo(ContactList);

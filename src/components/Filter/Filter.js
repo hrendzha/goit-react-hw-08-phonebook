@@ -1,25 +1,27 @@
 import { memo } from 'react';
+import { TextField } from '@mui/material';
 import PropTypes from 'prop-types';
-import s from './Filter.module.css';
 
 Filter.propTypes = {
-    filter: PropTypes.string.isRequired,
-    onFilterChange: PropTypes.func.isRequired,
+  filter: PropTypes.string.isRequired,
+  onFilterChange: PropTypes.func.isRequired,
+  filterInputRef: PropTypes.object,
 };
 
-function Filter({ filter, onFilterChange }) {
-    return (
-        <label className={s.field}>
-            <span className={s.label}>Find contacts by name</span>
-            <input
-                type="text"
-                name="filter"
-                value={filter}
-                autoComplete="off"
-                onChange={onFilterChange}
-            />
-        </label>
-    );
+function Filter({ filter, onFilterChange, filterInputRef }) {
+  return (
+    <TextField
+      ref={filterInputRef}
+      autoComplete="off"
+      name="filter"
+      id="filter"
+      label="Filter"
+      margin="normal"
+      size="small"
+      onChange={onFilterChange}
+      value={filter}
+    />
+  );
 }
 
 export default memo(Filter);
